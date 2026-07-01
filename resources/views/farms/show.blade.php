@@ -11,18 +11,20 @@
                 <h1 class="text-2xl font-bold text-gray-800">{{ $farm->farm_name }}</h1>
                 <p class="text-sm text-gray-500">{{ $farm->region }} &middot; {{ $farm->crop_type }}</p>
             </div>
+            @if(auth()->user()->isAdmin())
             <div class="flex gap-3">
                 <a href="{{ route('farms.edit', $farm) }}" class="px-5 py-2.5 rounded-full text-sm font-semibold text-white bg-blue-400 hover:bg-blue-500 shadow-sm">
                     Edit
                 </a>
-                <form method="POST" action="{{ route('farms.destroy', $farm) }}" onsubmit="return confirm('Yakin ingin menghapus data lahan ini?')">
+                <form method="POST" action="{{ route('farms.destroy', $farm) }}" id="deleteFormShow">
                     @csrf
                     @method('DELETE')
-                    <button type="submit" class="px-5 py-2.5 rounded-full text-sm font-semibold text-white bg-rose-400 hover:bg-rose-500 shadow-sm">
+                    <button type="button" onclick="openDeleteModal('deleteFormShow', 'Hapus Lahan?', 'Data lahan {{ $farm->farm_name }} akan dihapus dan bisa dipulihkan dari Riwayat Terhapus.')" class="px-5 py-2.5 rounded-full text-sm font-semibold text-white bg-rose-400 hover:bg-rose-500 shadow-sm">
                         Hapus
                     </button>
                 </form>
             </div>
+        @endif
         </div>
     </div>
 
@@ -49,6 +51,38 @@
             @else
                 <p class="text-base text-gray-400 mt-1">Belum tersedia — layanan prediksi tidak merespons saat data disimpan.</p>
             @endif
+        </div>
+    </div>
+
+    <div class="bg-amber-50 border border-amber-200 rounded-xl px-5 py-3 mb-8 flex items-start gap-2">
+        <span class="text-amber-500 text-sm mt-0.5">&#9888;</span>
+        <p class="text-xs text-amber-700">Estimasi bersifat indikatif karena korelasi fitur-target pada dataset training tergolong lemah. Lihat <a href="{{ route('farms.about-model') }}" class="underline font-medium">Tentang Model</a> untuk detail lengkap.</p>
+    </div>
+
+    {{-- Rekomendasi Otomatis --}}
+    <div class="bg-white rounded-2xl shadow-sm border border-mint-100 p-6 mb-8">
+        <h2 class="text-sm font-semibold text-gray-500 uppercase mb-4">Rekomendasi Otomatis</h2>
+        <div class="space-y-3">
+            @foreach ($recommendations as $rec)
+                @php
+                    $styles = match ($rec['level']) {
+                        'danger' => 'bg-rose-50 border-rose-200 text-rose-700',
+                        'warning' => 'bg-amber-50 border-amber-200 text-amber-700',
+                        'success' => 'bg-mint-50 border-mint-200 text-mint-700',
+                        default => 'bg-sky-50 border-sky-200 text-sky-700',
+                    };
+                    $icon = match ($rec['level']) {
+                        'danger' => '&#9888;',
+                        'warning' => '&#9888;',
+                        'success' => '&#10003;',
+                        default => '&#8505;',
+                    };
+                @endphp
+                <div class="border rounded-xl px-4 py-3 flex items-start gap-2 text-sm {{ $styles }}">
+                    <span class="mt-0.5">{!! $icon !!}</span>
+                    <p>{{ $rec['message'] }}</p>
+                </div>
+            @endforeach
         </div>
     </div>
 
